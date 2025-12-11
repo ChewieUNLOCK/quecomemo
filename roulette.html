@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>¿QUE COMEMO??</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@400;600&display=swap');
+
+        :root {
+            --bg-color: #1a1a1a;
+            --container-bg: #2d2d2d;
+            --text-color: #ffffff;
+            --accent-color: #FF5722;
+            /* Vibrant Orange */
+            --modal-bg: rgba(0, 0, 0, 0.9);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 9:16 Container simulation for Desktop */
+        #app-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            background-color: var(--container-bg);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+        }
+
+        @media (min-width: 500px) {
+            #app-container {
+                width: 45vh;
+                /* Aspect Ratio logic approximation */
+                height: 80vh;
+                border-radius: 20px;
+                border: 8px solid #333;
+            }
+        }
+
+        /* HEADER */
+        .header {
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+            z-index: 10;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 100%);
+        }
+
+        .logo {
+            max-width: 120px;
+            max-height: 80px;
+            object-fit: contain;
+            margin-bottom: 1px;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+        }
+
+        .title {
+            font-family: 'Anton', sans-serif;
+            /* Impact-like font */
+            font-size: 2.5rem;
+            color: #FFD700;
+            /* Gold */
+            text-shadow: 2px 2px 0px #000;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+
+        /* GAME AREA */
+        .game-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            width: 100%;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 90%;
+            max-width: 350px;
+            aspect-ratio: 1/1;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.4));
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            transform: rotate(0deg);
+            /* Transition controlled by JS */
+        }
+
+        /* POINTER */
+        .pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 50px;
+            background: #fff;
+            clip-path: polygon(100% 0, 50% 100%, 0 0);
+            z-index: 20;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+        }
+
+        /* CONTROLS */
+        .controls {
+            padding: 30px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding-bottom: 50px;
+        }
+
+        .spin-btn {
+            background: linear-gradient(135deg, #FF5722 0%, #FF9800 100%);
+            border: none;
+            border-radius: 50px;
+            padding: 15px 60px;
+            font-family: 'Anton', sans-serif;
+            font-size: 1.8rem;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .spin-btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 8px rgba(255, 87, 34, 0.4);
+        }
+
+        .spin-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+            color: #aaa;
+            box-shadow: none;
+        }
+
+        /* MODAL */
+        .modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            z-index: 100;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            width: 80%;
+            max-width: 300px;
+            box-shadow: 0 0 30px rgba(255, 87, 34, 0.6);
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .winner-label {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .winner-text {
+            font-family: 'Anton', sans-serif;
+            font-size: 2rem;
+            color: var(--accent-color);
+            line-height: 1.2;
+            margin-bottom: 20px;
+        }
+
+        .close-btn {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="app-container">
+        <header class="header">
+            <!-- Ensure this file exists in the same directory -->
+            <img src="./roulette_header_logo.png" alt="Logo" class="logo">
+            <h1 class="title">QUE COMEMO??</h1>
+        </header>
+
+        <section class="game-area">
+            <div class="wheel-container">
+                <div class="pointer"></div>
+                <canvas id="wheelCanvas" width="500" height="500"></canvas>
+            </div>
+        </section>
+
+        <div class="controls">
+            <button id="spinBtn" class="spin-btn">GIRAR</button>
+        </div>
+
+        <div id="resultModal" class="modal">
+            <div class="modal-content">
+                <div class="winner-label">Hoy se come:</div>
+                <div id="winnerText" class="winner-text">...</div>
+                <button class="close-btn" onclick="closeModal()">SIII!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const spinBtn = document.getElementById('spinBtn');
+        const modal = document.getElementById('resultModal');
+        const winnerText = document.getElementById('winnerText');
+
+        const options = [
+            "Comida en el nochi",
+            "Combo de Mac",
+            "Pizza",
+            "Hambuguesa",
+            "La farola",
+            "Parrilla"
+        ];
+
+        // Vibrant distinct colors for slices
+        const colors = [
+            '#FF5252', // Red
+            '#FF4081', // Pink
+            '#7C4DFF', // Deep Purple
+            '#448AFF', // Blue
+            '#69F0AE', // Green
+            '#FFD740'  // Yellow
+        ];
+
+        let startAngle = 0;
+        const arc = Math.PI / (options.length / 2);
+        let spinTimeout = null;
+        let spinAngleStart = 0; // Starting spin speed
+        let spinTime = 0;
+        let spinTimeTotal = 0;
+        let currentRotation = 0;
+
+        function drawRouletteWheel() {
+            const outsideRadius = 240;
+            const textRadius = 160;
+            const insideRadius = 0;
+
+            ctx.clearRect(0, 0, 500, 500);
+
+            ctx.save();
+            ctx.translate(250, 250);
+            // Rotate the entire canvas context based on current rotation
+            ctx.rotate(currentRotation);
+
+            for (let i = 0; i < options.length; i++) {
+                const angle = startAngle + i * arc;
+
+                // Draw Slice
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.beginPath();
+                ctx.arc(0, 0, outsideRadius, angle, angle + arc, false);
+                ctx.arc(0, 0, insideRadius, angle + arc, angle, true);
+                ctx.fill();
+
+                // Draw Text
+                ctx.save();
+                ctx.fillStyle = (i === 5) ? "#333" : "white"; // Dark text for yellow slice
+
+                // Translate to the center of the slice text
+                ctx.translate(0, 0);
+
+                // Rotate to align with slice
+                ctx.rotate(angle + arc / 2);
+
+                ctx.textAlign = "right";
+                ctx.font = 'bold 24px Poppins';
+                ctx.fillText(options[i], outsideRadius - 20, 10);
+
+                ctx.restore();
+            }
+
+            // Draw center circle (decoration)
+            ctx.beginPath();
+            ctx.arc(0, 0, 30, 0, 2 * Math.PI);
+            ctx.fillStyle = "#fff";
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        // We use a custom ease-out logic for smooth deceleration
+        function rotateWheel() {
+            spinTime += 20;
+            if (spinTime >= spinTimeTotal) {
+                stopRotateWheel();
+                return;
+            }
+
+            // Exponential ease-out
+            const spinAngle = spinAngleStart - easeOut(spinTime, 0, spinAngleStart, spinTimeTotal);
+            currentRotation += (spinAngle * Math.PI / 180);
+            drawRouletteWheel();
+            spinTimeout = setTimeout(rotateWheel, 20); // ~60fps
+        }
+
+        function easeOut(t, b, c, d) {
+            const ts = (t /= d) * t;
+            const tc = ts * t;
+            return b + c * (tc + -3 * ts + 3 * t);
+        }
+
+        function stopRotateWheel() {
+            clearTimeout(spinTimeout);
+
+            // Calculate the angle where the pointer (top, 270deg or -90deg equivalent relative to rotation) is pointing
+            // Our pointer is at global TOP (index 0 starts at 0 rads (3 o'clock) usually).
+            // Actually, with standard arc draw, 0 is 3 o'clock.
+            // Pointer is at Top (12 o'clock), which is -90deg or 270deg.
+            // We need to normalize currentRotation.
+
+            const degrees = currentRotation * 180 / Math.PI + 90;
+            // +90 corrects for 0 being at 3 o'clock, we want 0 relative to pointer at 12 o'clock? 
+            // Let's simplify: 
+            // We want to find which slice intersects the 270degree (-PI/2) line in the canvas space.
+            // Since we rotated the context, the 'pointer' remains static at visual top.
+            // The slice under the pointer is the one that correlates to angle -currentRotation - PI/2 ??
+
+            // Easier math:
+            // The angle of the slice `i` is `startAngle + i * arc`.
+            // We added `currentRotation` to everything.
+            // We want the slice where `currentRotation + i*arc` wraps around and hits -PI/2 (top).
+
+            const arcd = arc * 180 / Math.PI; // degrees per slice (60)
+            const index = Math.floor((360 - degrees % 360) / arcd);
+
+            // Because of the way we draw (0 is 3 o'clock), index calculation might be offset.
+            // Let's rely on modulo math.
+            // When rotation is 0, Top is 270deg. 
+            // Segment 0 is 0-60deg (3-5 o'clock).
+            // Segment 1 is 60-120...
+            // ...
+            // Segment 4 is 240-300 (contains 270!). So at rot 0, Seg 4 is winner? No, let's verify visual.
+            // Visual top is -PI/2.
+
+            // Let's fix this using a simpler logic check:
+            // Calculate actual angle of each slice currently.
+            // Find one that spans across -PI/2 (or 3*PI/2).
+
+            // Actually, simpler hack:
+            // The calculated index logic is notoriously tricky with canvas rotation.
+            // Let's just normalize the final rotation to be positive 0-360.
+
+            let rotationDeg = (currentRotation * 180 / Math.PI) % 360;
+            if (rotationDeg < 0) rotationDeg += 360;
+
+            // The pointer is at 270 (Top). 
+            // We effectively subtract rotation from 270 to see what 'original angle' is at top now.
+            let angleAtPointer = (270 - rotationDeg);
+            if (angleAtPointer < 0) angleAtPointer += 360;
+
+            const winningIndex = Math.floor(angleAtPointer / arcd);
+
+            // Debug text
+            // console.log(`Rot: ${rotationDeg}, AngleAtPointer: ${angleAtPointer}, Index: ${winningIndex}`);
+
+            const text = options[winningIndex];
+            showResult(text);
+            spinBtn.disabled = false;
+        }
+
+        function showResult(text) {
+            winnerText.innerText = text;
+            modal.classList.add('active');
+            fireConfetti();
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+        }
+
+        spinBtn.addEventListener('click', () => {
+            spinBtn.disabled = true;
+            spinAngleStart = Math.random() * 10 + 20; // Random speed
+            spinTime = 0;
+            spinTimeTotal = Math.random() * 2000 + 3000; // Random duration 3-5s
+            rotateWheel();
+        });
+
+        // Simple confetti effect for validation
+        function fireConfetti() {
+            // Placeholder: could add canvas confetti here if requested, 
+            // for now just a nice UI pop is enough.
+        }
+
+        // Initial Draw
+        drawRouletteWheel();
+
+    </script>
+</body>
+
+</html>
